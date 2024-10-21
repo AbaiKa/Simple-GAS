@@ -16,7 +16,9 @@ public class HealthComponent
     /// <para> Argument 1: "start" Health</para>
     /// <para> Argument 2: "current" Health</para>
     /// </summary>
-    public UnityEvent<int, int> onChanged;
+    public UnityEvent<int, int> onChanged = new UnityEvent<int, int>();
+
+    public UnityEvent onDead = new UnityEvent();
     
     /// <summary>
     /// Set start health
@@ -45,5 +47,10 @@ public class HealthComponent
     {
         Value = Mathf.Max(0, Value - value);
         onChanged?.Invoke(MaxValue, Value);
+
+        if(Value == 0)
+        {
+            onDead?.Invoke();
+        }
     }
 }

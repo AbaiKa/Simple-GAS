@@ -4,6 +4,9 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "ScriptableObjects/Ability", fileName = "Ability_")]
 public class AbilityConfig : ScriptableObject
 {
+    [field: SerializeField] 
+    public string Id { get; private set; }
+
     [SerializeField] private bool _hasEffect;
     /// <summary>
     /// Does the current ability have a duration
@@ -44,6 +47,12 @@ public class EffectProperties
     [field: Tooltip("Cast on self or enemy")]
     public bool CastOnSelf { get; private set; }
     /// <summary>
+    /// Use in the next turn
+    /// </summary>
+    [field: SerializeField]
+    [field: Tooltip("Use in the next turn")]
+    public bool UseInNextTurn { get; private set; }
+    /// <summary>
     /// Effect type
     /// </summary>
     [field: SerializeField]
@@ -61,4 +70,10 @@ public class EffectProperties
     [field: SerializeField]
     [field: Tooltip("Effect duration")]
     public int Duration { get; private set; }
+    /// <summary>
+    /// Effect destroy time
+    /// </summary>
+    [field: SerializeField]
+    [field: Tooltip("Effect destroy time")]
+    public int DestroyTime { get; private set; }
 }

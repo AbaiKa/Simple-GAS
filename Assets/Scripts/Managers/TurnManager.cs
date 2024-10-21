@@ -1,50 +1,74 @@
+using System.Collections;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class TurnManager : MonoBehaviour, IService
 {
-    [Header("Properties")]
-    [SerializeField] private bool isPlayerFirst;
-    [Header("Events")]
-    /// <summary>
-    /// Called on every turn of the player and the enemy.
-    /// </summary>
-    public UnityEvent<Unit> onMove;
-
-
     private Unit player;
     private Unit enemy;
 
     private Unit currentUnit;
     private bool isPlayerTurn;
-    public void StartGame(Unit player, Unit enemy)
+    private bool inProgress;
+    public void Init(Unit player, Unit enemy)
     {
+        inProgress = false;
+        isPlayerTurn = false;
+
         this.player = player;
         this.enemy = enemy;
 
-        isPlayerTurn = isPlayerFirst;
-        currentUnit = isPlayerTurn ? this.player : this.enemy;
+        this.enemy.onTurnEnd.AddListener(StartPlayerTurn);
 
-        TurnStart();
+        StartPlayerTurn();
     }
-    private void TurnStart()
+    public void DeInit()
     {
-        currentUnit.TurnStart();
+        StopAllCoroutines();
+        enemy.onTurnEnd.RemoveListener(StartPlayerTurn);
+    }
+    public void StartPlayerTurn()
+    {
+        if (ServicesAssistance.Main.Get<GameProcessManager>().Status == GameStatus.Finish)
+        {
+            return;
+        }
 
-        onMove?.Invoke(currentUnit);
+        ChangeTurn();
+
+        Turn();
     }
-    private void TurnEnd()
+    public void StartEnemyTurn()
     {
-        currentUnit.TurnEnd();
-        
+        if (ServicesAssistance.Main.Get<GameProcessManager>().Status == GameStatus.Finish)
+        {
+            return;
+        }
+
+        if (!inProgress)
+        {
+            inProgress = true;
+            StartCoroutine(EnemyTurnRoutine());
+        }
+    }
+    private IEnumerator EnemyTurnRoutine()
+    {
+        ChangeTurn();
+
+        yield return new WaitForSeconds(Random.Range(1, 3));
+
+        Turn();
+
+        inProgress = false;
+    }
+    private void ChangeTurn()
+    {
         isPlayerTurn = !isPlayerTurn;
         currentUnit = isPlayerTurn ? player : enemy;
 
-        TurnStart();
+        ServicesAssistance.Main.Get<UIManager>().SetActiveAbilitiesPanel(isPlayerTurn);
     }
-
-    private void TurnStop()
+    private void Turn()
     {
-
+        currentUnit.TurnStart();
     }
 }

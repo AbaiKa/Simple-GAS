@@ -6,10 +6,10 @@ public class ShieldEffect : AEffect
 
     protected override void Logic()
     {
-        
+        Value = startValue;
     }
     public int GetBlockedDamage(int damage)
     {
-        return Mathf.Max(0, damage - Value);
+        return Value - damage;
     }
 }

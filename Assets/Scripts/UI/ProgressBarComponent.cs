@@ -5,10 +5,12 @@ public class ProgressBarComponent : MonoBehaviour
 {
     [SerializeField] private Image fillImage;
 
-    public void UpdateFill(int maxValue, int currentValue)
+    public void UpdateFill(float maxValue, float currentValue)
     {
         float onePercent = maxValue / 100;
         float result = currentValue / onePercent;
-        fillImage.fillAmount = result / 100;
+        float value = currentValue == 0 ? 0 : result / 100;
+
+        fillImage.fillAmount = value;
     }
 }

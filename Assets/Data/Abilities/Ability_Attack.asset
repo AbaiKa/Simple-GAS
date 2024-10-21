@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 630441161253de344bdadf0f03888ce3, type: 3}
   m_Name: Ability_Attack
   m_EditorClassIdentifier: 
+  <Id>k__BackingField: Attack
   _hasEffect: 1
   <EffectProperties>k__BackingField:
   - <CastOnSelf>k__BackingField: 0
+    <UseInNextTurn>k__BackingField: 0
     <Type>k__BackingField: 0
     <Value>k__BackingField: 8
     <Duration>k__BackingField: 0
+    <DestroyTime>k__BackingField: 0
   _hasCooldown: 0
   <Cooldown>k__BackingField: 0
   <Title>k__BackingField: "\u0410\u0442\u0430\u043A\u0430"

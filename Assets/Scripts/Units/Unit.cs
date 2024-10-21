@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using TMPro;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -7,24 +7,31 @@ public class Unit : MonoBehaviour
 {
     public bool IsAlive => health.Value > 0;
 
-    [SerializeField] private ProgressBarComponent healthBar;
-    [SerializeField] private TextMeshProUGUI healthTextComponent;
-    [SerializeField] private EffectsNotificator effectsNotificatorPrefab;
-    [SerializeField] private Transform effectsNotificationsContainer;
+    [field: SerializeField] public UnitHUD HUD {  get; private set; }
+    [Space]
+    public UnityEvent onTurnStart = new UnityEvent();
+    public UnityEvent onTurnEnd = new UnityEvent();
+
     private HealthComponent health;
 
-    private List<AEffect> effects = new List<AEffect>();
-
-    [Space]
-    public UnityEvent onTurnStart;
-    public UnityEvent onTurnEnd;
+    [field: SerializeField] public List<Ability> Abilities { get; private set; } = new List<Ability>();
+    [field: SerializeField] public List<AEffect> Effects { get; private set; } = new List<AEffect>();
 
     #region Methods
     #region Public
     public void Init()
     {
         health = new HealthComponent(Random.Range(40, 50));
-        health.onChanged.AddListener(UpdateHUD);
+        health.onChanged.AddListener(HUD.UpdateHealthBar);
+        health.onDead.AddListener(OnDead);
+
+        HUD.UpdateHealthBar(health.MaxValue, health.Value);
+    }
+    public void DeInit()
+    {
+        health.onChanged.RemoveListener(HUD.UpdateHealthBar);
+        health.onDead.RemoveListener(OnDead);
+        Destroy(gameObject);
     }
     public virtual void TurnStart()
     {
@@ -38,16 +45,20 @@ public class Unit : MonoBehaviour
     #region Health
     public void TakeDamage(int damage)
     {
-        int currentDamage = 0;
+        int currentDamage = damage;
 
-        for (int i = 0; i < effects.Count; i++) 
+        if (Effects.Count > 0)
         {
-            if (effects[i].Type == EffectType.Shield)
+            var shieldsList = Effects.OfType<ShieldEffect>().ToArray();
+
+            for (int i = 0; i < shieldsList.Length; i++)
             {
-                currentDamage += (effects[i] as ShieldEffect).GetBlockedDamage(damage);
+                int block = shieldsList[i].GetBlockedDamage(currentDamage);
+                currentDamage -= (currentDamage + block);
             }
         }
 
+        currentDamage = currentDamage > 0 ? currentDamage : 0;
         health.Substract(currentDamage);
     }
     public void AddHealth(int value)
@@ -56,36 +67,42 @@ public class Unit : MonoBehaviour
     }
     #endregion
     #region Ability & Effect
-    public void AddEffect(AEffect effect)
+    public void SetAbilities(List<Ability> abilities)
     {
-        effects.Add(effect);
-
-        var e = Instantiate(effectsNotificatorPrefab, effectsNotificationsContainer);
-        e.Init(effect.Icon, effect.Duration);
-
-        effect.onUse.AddListener((c) => { e.SetInfo(c.Duration); });
-        effect.onDeactivate.AddListener((c) => { e.DeInit(); });
+        Abilities = abilities;
     }
-    public void RemoveEffect(EffectType type)
+    public void AddEffect(AEffect aEffect)
     {
-        foreach (var e in effects)
+        Effects.Add(aEffect);
+    }
+    public void RemoveEffects(EffectType type)
+    {
+        if (Effects.Count > 0)
         {
-            if (e.Type == type)
+            var removeEffects = Effects.Where(e => e.Type == type).ToArray();
+
+            for(int i = 0; i < removeEffects.Length; i++)
             {
-                effects.Remove(e);
-                e.Cancel();
+                removeEffects[i].Cancel();
             }
+        }
+    }
+    public void RemoveEffectFromList(AEffect effect)
+    {
+        if (Effects.Contains(effect))
+        {
+            Effects.Remove(effect);
         }
     }
     #endregion
     #endregion
 
-    #region Private
-    private void UpdateHUD(int max, int current)
+    #region Protected
+    protected virtual void OnDead()
     {
-        healthBar.UpdateFill(max, current);
-        healthTextComponent.text = current.ToString();
+        ServicesAssistance.Main.Get<GameProcessManager>().SetGameStatus(GameStatus.Finish);
     }
     #endregion
+
     #endregion
 }

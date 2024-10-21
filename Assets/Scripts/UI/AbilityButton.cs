@@ -1,6 +1,5 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class AbilityButton : MonoBehaviour
@@ -11,17 +10,16 @@ public class AbilityButton : MonoBehaviour
     [SerializeField] private ProgressBarComponent barComponent;
     [SerializeField] private TextMeshProUGUI progressText;
 
-    public UnityEvent onClick;
     private Ability ability;
     public void Init(Ability ability)
     {
         this.ability = ability;
-        imageComponent.sprite = ability.Icon;
-        titleText.text = ability.Title;
+        imageComponent.sprite = ability.Config.Icon;
+        titleText.text = ability.Config.Title;
 
-        if (ability.HasCooldown)
+        if (ability.Config.HasCooldown)
         {
-            this.ability.Owner.onTurnEnd.AddListener(UpdateAbilityValues);
+            this.ability.Owner.onTurnStart.AddListener(UpdateAbilityValues);
             UpdateAbilityValues();
         }
         else
@@ -30,13 +28,26 @@ public class AbilityButton : MonoBehaviour
         }
         mButton.onClick.AddListener(OnClick);
     }
+    public void DeInit()
+    {
+        if (ability.Config.HasCooldown)
+        {
+            ability.Owner.onTurnStart.RemoveListener(UpdateAbilityValues);
+        }
+
+        Destroy(gameObject);
+    }
     private void OnClick()
     {
-        onClick?.Invoke();
+        if (ability.IsAvailable())
+        {
+            var sendedData = new RequestData<EffectProperties[]>(ability.Config.Id, ability.Config.EffectProperties);
+            ServicesAssistance.Main.Get<ServerAssistance>().SendAttackData(sendedData);
+        }
     }
     private void UpdateAbilityValues()
     {
-        barComponent.UpdateFill(ability.StartCooldown, ability.CurrentCooldown);
+        barComponent.UpdateFill(ability.Config.Cooldown, ability.CurrentCooldown);
 
         if (ability.IsAvailable())
         {

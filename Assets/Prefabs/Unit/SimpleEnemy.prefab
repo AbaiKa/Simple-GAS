@@ -335,11 +335,11 @@ GameObject:
   m_Component:
   - component: {fileID: 3933038467235195493}
   - component: {fileID: 3237394009581413656}
-  - component: {fileID: 1313644827702645282}
   - component: {fileID: 348591391673253025}
-  - component: {fileID: 7746121497574303497}
+  - component: {fileID: 3196191601486147122}
+  - component: {fileID: 8000891238044625983}
   m_Layer: 0
-  m_Name: SimpleUnit
+  m_Name: SimpleEnemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -413,25 +413,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &1313644827702645282
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5253006999265591695}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1dbcb5fd2ca911479ae6436dc076aec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  <HUD>k__BackingField: {fileID: 7746121497574303497}
-  onTurnStart:
-    m_PersistentCalls:
-      m_Calls: []
-  onTurnEnd:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!114 &348591391673253025
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -445,7 +426,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 3296245563352699276}
---- !u!114 &7746121497574303497
+--- !u!114 &3196191601486147122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5253006999265591695}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b482ff25e28c0ab418f7c831a9285422, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <HUD>k__BackingField: {fileID: 8000891238044625983}
+  onTurnStart:
+    m_PersistentCalls:
+      m_Calls: []
+  onTurnEnd:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &8000891238044625983
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

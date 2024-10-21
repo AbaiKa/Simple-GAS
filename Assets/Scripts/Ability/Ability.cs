@@ -2,29 +2,20 @@ using UnityEngine;
 
 public class Ability : MonoBehaviour
 {
-    public bool HasEffect { get; private set; }
-    public EffectProperties[] EffectProperties { get; private set; }
-    public bool HasCooldown { get; private set; }
-    public int StartCooldown { get; private set; }
+    public AbilityConfig Config {  get; private set; }
     public int CurrentCooldown { get; private set; }
-    public string Title { get; private set; }
-    public Sprite Icon { get; private set; }
     public Unit Owner { get; private set; }
     public Unit Target { get; private set; }
 
     public void Init(AbilityConfig config)
     {
-        HasEffect = config.HasEffect;
-        EffectProperties = config.EffectProperties;
-        HasCooldown = config.HasCooldown;
-        StartCooldown = config.Cooldown;
+        Config = config;
         CurrentCooldown = 0;
-        Title = config.Title;
-        Icon = config.Icon;
     }
     public void DeInit()
     {
         Owner.onTurnEnd.RemoveListener(UpdateAbility);
+        Destroy(gameObject);
     }
     public void SetOwner(Unit owner)
     {
@@ -37,29 +28,13 @@ public class Ability : MonoBehaviour
     }
     public void Use()
     {
-        if (!IsAvailable())
-        {
-            Debug.LogWarning($"Ability not ready yet. Wait {CurrentCooldown} moves");
-            return;
-        }
+        CurrentCooldown = Config.Cooldown;
 
-        CurrentCooldown = StartCooldown;
-
-        if (HasEffect)
-        {
-            for(int i = 0; i < EffectProperties.Length; i++)
-            {
-                var e = ServicesAssistance.Main.Get<EffectsBuilder>().Build(EffectProperties[i].Type);
-                
-                var target = EffectProperties[i].CastOnSelf ? Owner : Target;
-                e.Activate(target, Icon, EffectProperties[i].Value, EffectProperties[i].Duration);
-                target.AddEffect(e);
-            }
-        }
+        BuildEffects();
     }
     public bool IsAvailable()
     {
-        if (HasCooldown)
+        if (Config.HasCooldown)
         {
             return CurrentCooldown == 0;
         }
@@ -68,9 +43,24 @@ public class Ability : MonoBehaviour
     }
     private void UpdateAbility()
     {
-        if (HasCooldown)
+        if (Config.HasCooldown)
         {
             CurrentCooldown = Mathf.Max(0, CurrentCooldown - 1);
+        }
+    }
+
+    private void BuildEffects()
+    {
+        if (Config.HasCooldown)
+        {
+            var props = Config.EffectProperties;
+            for (int i = 0; i < props.Length; i++)
+            {
+                var effect = ServicesAssistance.Main.Get<EffectsBuilder>().Build(props[i].Type);
+                var target = props[i].CastOnSelf ? Owner : Target;
+
+                effect.Init(target, Config.Icon, props[i]);
+            }
         }
     }
 }
