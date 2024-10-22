@@ -1,10 +1,11 @@
+using System.Collections;
 using UnityEngine;
 
 public class SimpleEnemy : Unit
 {
-    public override void TurnStart()
+    public override IEnumerator Turn()
     {
-        base.TurnStart();
+        yield return base.Turn();
 
         while (true)
         {
@@ -12,11 +13,13 @@ public class SimpleEnemy : Unit
 
             if (Abilities[id].IsAvailable())
             {
-                var sendedData = new RequestData<EffectProperties[]>(Abilities[id].Config.Id, Abilities[id].Config.EffectProperties);
-                ServicesAssistance.Main.Get<ServerAssistance>().SendAttackData(sendedData);
-                TurnEnd();
+                ServicesAssistance.Main.Get<TurnManager>().ChangeTurn(Id);
+                ServicesAssistance.Main.Get<AdapterAssistance>().BuildEffect(Abilities[id].Owner.Id,
+                    Abilities[id].Config.Id, Abilities[id].Config.EffectProperties);
                 break;
             }
+
+            yield return null;
         }
     }
 }

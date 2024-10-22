@@ -3,6 +3,6 @@ public class BurningEffect : AEffect
     public override EffectType Type => EffectType.Burning;
     protected override void Logic()
     {
-        target.TakeDamage(Value);
+        ServicesAssistance.Main.Get<AdapterAssistance>().TakeDamage(target.Id, Value);
     }
 }

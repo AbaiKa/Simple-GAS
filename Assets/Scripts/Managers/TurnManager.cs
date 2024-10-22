@@ -1,74 +1,84 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class TurnManager : MonoBehaviour, IService
 {
-    private Unit player;
-    private Unit enemy;
+    private List<Unit> units = new List<Unit>();
 
-    private Unit currentUnit;
-    private bool isPlayerTurn;
     private bool inProgress;
-    public void Init(Unit player, Unit enemy)
+    public void Init(List<Unit> units)
     {
         inProgress = false;
-        isPlayerTurn = false;
 
-        this.player = player;
-        this.enemy = enemy;
+        this.units = units;
 
-        this.enemy.onTurnEnd.AddListener(StartPlayerTurn);
-
-        StartPlayerTurn();
+        ServicesAssistance.Main.Get<AdapterAssistance>().onUpdateTurn.AddListener(Turn);
     }
     public void DeInit()
     {
         StopAllCoroutines();
-        enemy.onTurnEnd.RemoveListener(StartPlayerTurn);
+        ServicesAssistance.Main.Get<AdapterAssistance>().onUpdateTurn.RemoveListener(Turn);
     }
-    public void StartPlayerTurn()
+    public void ChangeTurn(string id)
     {
         if (ServicesAssistance.Main.Get<GameProcessManager>().Status == GameStatus.Finish)
         {
             return;
         }
 
-        ChangeTurn();
-
-        Turn();
-    }
-    public void StartEnemyTurn()
-    {
-        if (ServicesAssistance.Main.Get<GameProcessManager>().Status == GameStatus.Finish)
+        Unit currentUnit = null;
+        for (int i = 0; i < units.Count; i++)
         {
-            return;
+            if (units[i].Id != id)
+            {
+                currentUnit = units[i];
+                break;
+            }
         }
 
+        if (currentUnit != null)
+        {
+            ServicesAssistance.Main.Get<AdapterAssistance>().UpdateTurn(currentUnit.Id);
+        }
+    }
+    private void Turn(string id)
+    {
         if (!inProgress)
         {
             inProgress = true;
-            StartCoroutine(EnemyTurnRoutine());
+            StartCoroutine(TurnRoutine(id));
         }
     }
-    private IEnumerator EnemyTurnRoutine()
+    private IEnumerator TurnRoutine(string id)
     {
-        ChangeTurn();
+        var currentUnit = GetCurrentUnit(id);
 
-        yield return new WaitForSeconds(Random.Range(1, 3));
+        if (currentUnit != null)
+        {
+            yield return new WaitForSeconds(Random.Range(1, 3));
 
-        Turn();
+            inProgress = false;
 
+            ServicesAssistance.Main.Get<UIManager>().SetActiveAbilitiesPanel(currentUnit.IsPlayer);
+            yield return currentUnit.Turn();
+        }
         inProgress = false;
     }
-    private void ChangeTurn()
-    {
-        isPlayerTurn = !isPlayerTurn;
-        currentUnit = isPlayerTurn ? player : enemy;
 
-        ServicesAssistance.Main.Get<UIManager>().SetActiveAbilitiesPanel(isPlayerTurn);
-    }
-    private void Turn()
+    private Unit GetCurrentUnit(string id)
     {
-        currentUnit.TurnStart();
+        Unit currentUnit = null;
+
+        for (int i = 0; i < units.Count; i++)
+        {
+            if (units[i].Id == id)
+            {
+                currentUnit = units[i];
+                break;
+            }
+        }
+
+        return currentUnit;
     }
 }

@@ -11,26 +11,32 @@ public class Ability : MonoBehaviour
     {
         Config = config;
         CurrentCooldown = 0;
+
+        ServicesAssistance.Main.Get<AdapterAssistance>().onBuildEffects.AddListener(Use);
     }
     public void DeInit()
     {
-        Owner.onTurnEnd.RemoveListener(UpdateAbility);
+        ServicesAssistance.Main.Get<AdapterAssistance>().onBuildEffects.RemoveListener(Use);
+        Owner.onTurn.RemoveListener(UpdateAbility);
         Destroy(gameObject);
     }
     public void SetOwner(Unit owner)
     {
         Owner = owner;
-        Owner.onTurnStart.AddListener(UpdateAbility);
+        Owner.onTurn.AddListener(UpdateAbility);
     }
     public void SetTarget(Unit target) 
     { 
         Target = target;
     }
-    public void Use()
+    private void Use(BuildEffectData data)
     {
-        CurrentCooldown = Config.Cooldown;
+        if (data.OwnerId == Owner.Id && data.AbilityId == Config.Id)
+        {
+            CurrentCooldown = Config.Cooldown;
 
-        BuildEffects();
+            BuildEffects(data.Properties);
+        }
     }
     public bool IsAvailable()
     {
@@ -49,18 +55,14 @@ public class Ability : MonoBehaviour
         }
     }
 
-    private void BuildEffects()
+    private void BuildEffects(EffectProperties[] props)
     {
-        if (Config.HasCooldown)
+        for (int i = 0; i < props.Length; i++)
         {
-            var props = Config.EffectProperties;
-            for (int i = 0; i < props.Length; i++)
-            {
-                var effect = ServicesAssistance.Main.Get<EffectsBuilder>().Build(props[i].Type);
-                var target = props[i].CastOnSelf ? Owner : Target;
+            var effect = ServicesAssistance.Main.Get<EffectsBuilder>().Build(props[i].Type);
+            var target = props[i].CastOnSelf ? Owner : Target;
 
-                effect.Init(target, Config.Icon, props[i]);
-            }
+            effect.Init(target, props[i]);
         }
     }
 }

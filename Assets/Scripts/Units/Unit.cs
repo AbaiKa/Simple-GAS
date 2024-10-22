@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -5,12 +6,13 @@ using UnityEngine.Events;
 
 public class Unit : MonoBehaviour
 {
+    public string Id {  get; private set; }
+    public bool IsPlayer { get; private set; }
     public bool IsAlive => health.Value > 0;
 
     [field: SerializeField] public UnitHUD HUD {  get; private set; }
     [Space]
-    public UnityEvent onTurnStart = new UnityEvent();
-    public UnityEvent onTurnEnd = new UnityEvent();
+    public UnityEvent onTurn = new UnityEvent();
 
     private HealthComponent health;
 
@@ -19,11 +21,20 @@ public class Unit : MonoBehaviour
 
     #region Methods
     #region Public
-    public void Init()
+    public void Init(string id, bool isPlayer)
     {
-        health = new HealthComponent(Random.Range(40, 50));
+        Id = id;
+        IsPlayer = isPlayer;
+        health = new HealthComponent(50);
         health.onChanged.AddListener(HUD.UpdateHealthBar);
         health.onDead.AddListener(OnDead);
+
+        ServicesAssistance.Main.Get<AdapterAssistance>().onAddAbility.AddListener(AddAbility);
+        ServicesAssistance.Main.Get<AdapterAssistance>().onAddEffects.AddListener(AddEffect);
+        ServicesAssistance.Main.Get<AdapterAssistance>().onRemoveEffects.AddListener(RemoveEffects);
+
+        ServicesAssistance.Main.Get<AdapterAssistance>().onTakeDamage.AddListener(TakeDamage);
+        ServicesAssistance.Main.Get<AdapterAssistance>().onAddHealth.AddListener(AddHealth);
 
         HUD.UpdateHealthBar(health.MaxValue, health.Value);
     }
@@ -31,67 +42,90 @@ public class Unit : MonoBehaviour
     {
         health.onChanged.RemoveListener(HUD.UpdateHealthBar);
         health.onDead.RemoveListener(OnDead);
+
+        ServicesAssistance.Main.Get<AdapterAssistance>().onAddAbility.RemoveListener(AddAbility);
+        ServicesAssistance.Main.Get<AdapterAssistance>().onAddEffects.RemoveListener(AddEffect);
+        ServicesAssistance.Main.Get<AdapterAssistance>().onRemoveEffects.RemoveListener(RemoveEffects);
+
+        ServicesAssistance.Main.Get<AdapterAssistance>().onTakeDamage.RemoveListener(TakeDamage);
+        ServicesAssistance.Main.Get<AdapterAssistance>().onAddHealth.RemoveListener(AddHealth);
+
         Destroy(gameObject);
     }
-    public virtual void TurnStart()
+    public virtual IEnumerator Turn()
     {
-        onTurnStart?.Invoke();
-    }
-    public virtual void TurnEnd()
-    {
-        onTurnEnd?.Invoke();
+        onTurn?.Invoke();
+        yield return null;
     }
 
     #region Health
-    public void TakeDamage(int damage)
+    private void TakeDamage(HealthData data)
     {
-        int currentDamage = damage;
-
-        if (Effects.Count > 0)
+        if (data.OwnerId == Id)
         {
-            var shieldsList = Effects.OfType<ShieldEffect>().ToArray();
+            int currentDamage = data.Value;
 
-            for (int i = 0; i < shieldsList.Length; i++)
+            if (Effects.Count > 0)
             {
-                int block = shieldsList[i].GetBlockedDamage(currentDamage);
-                currentDamage -= (currentDamage + block);
-            }
-        }
+                var shieldsList = Effects.OfType<ShieldEffect>().ToArray();
 
-        currentDamage = currentDamage > 0 ? currentDamage : 0;
-        health.Substract(currentDamage);
+                for (int i = 0; i < shieldsList.Length; i++)
+                {
+                    int block = shieldsList[i].GetBlockedDamage(currentDamage);
+                    currentDamage -= (currentDamage + block);
+                }
+            }
+
+            currentDamage = currentDamage > 0 ? currentDamage : 0;
+            health.Substract(currentDamage);
+        }
     }
-    public void AddHealth(int value)
+    private void AddHealth(HealthData data)
     {
-        health.Add(value);
+        if (data.OwnerId == Id)
+        {
+            health.Add(data.Value);
+        }
     }
     #endregion
     #region Ability & Effect
-    public void SetAbilities(List<Ability> abilities)
+    private void AddAbility(AddAbilityData data)
     {
-        Abilities = abilities;
-    }
-    public void AddEffect(AEffect aEffect)
-    {
-        Effects.Add(aEffect);
-    }
-    public void RemoveEffects(EffectType type)
-    {
-        if (Effects.Count > 0)
+        if (data.OwnerId == Id)
         {
-            var removeEffects = Effects.Where(e => e.Type == type).ToArray();
-
-            for(int i = 0; i < removeEffects.Length; i++)
-            {
-                removeEffects[i].Cancel();
-            }
+            Abilities.Add(data.Ability);
         }
     }
-    public void RemoveEffectFromList(AEffect effect)
+    private void AddEffect(AddEffectData data)
     {
-        if (Effects.Contains(effect))
+        if (Id == data.OwnerId)
         {
-            Effects.Remove(effect);
+            Effects.Add(data.Effect);
+        }
+    }
+    private void RemoveEffects(RemoveEffectData data)
+    {
+        if (Id == data.Id)
+        {
+            if (Effects.Count > 0)
+            {
+                if (data.Type != EffectType.None)
+                {
+                    var removeEffects = Effects.Where(e => e.Type == data.Type).ToArray();
+
+                    for (int i = 0; i < removeEffects.Length; i++)
+                    {
+                        removeEffects[i].Cancel();
+                    }
+                }
+                else
+                {
+                    if (Effects.Contains(data.Effect))
+                    {
+                        Effects.Remove(data.Effect);
+                    }
+                }
+            }
         }
     }
     #endregion

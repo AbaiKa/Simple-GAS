@@ -26,9 +26,9 @@ public abstract class AEffect : MonoBehaviour
 
     protected abstract void Logic();
 
-    public void Init(Unit target, Sprite icon, EffectProperties properties)
+    public void Init(Unit target, EffectProperties properties)
     {
-        Icon = icon;
+        Icon = properties.Icon;
         Value = properties.Value;
         Duration = properties.Duration;
 
@@ -36,11 +36,13 @@ public abstract class AEffect : MonoBehaviour
         this.properties = properties;
 
         this.target = target;
-        this.target.AddEffect(this);
+
         this.target.HUD.AddEffectNotificator(this);
-        this.target.onTurnStart.AddListener(Use);
+        this.target.onTurn.AddListener(Use);
 
         turnsToStart = properties.UseInNextTurn ? 1 : 0;
+
+        ServicesAssistance.Main.Get<AdapterAssistance>().AddEffect(this.target.Id, this);
     }
     public void Cancel()
     {
@@ -49,9 +51,9 @@ public abstract class AEffect : MonoBehaviour
     private IEnumerator CancelRoutine()
     {
         onDeactivate?.Invoke(this);
-        target.onTurnStart.RemoveListener(Use);
+        target.onTurn.RemoveListener(Use);
         yield return new WaitForSeconds(properties.DestroyTime);
-        target.RemoveEffectFromList(this);
+        ServicesAssistance.Main.Get<AdapterAssistance>().RemoveEffects(target.Id, this);
         Destroy(gameObject);
     }
     private void Use()

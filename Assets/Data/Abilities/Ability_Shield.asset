@@ -15,12 +15,13 @@ MonoBehaviour:
   <Id>k__BackingField: Shield
   _hasEffect: 1
   <EffectProperties>k__BackingField:
-  - <CastOnSelf>k__BackingField: 0
+  - <CastOnSelf>k__BackingField: 1
     <UseInNextTurn>k__BackingField: 0
-    <Type>k__BackingField: 1
+    <Type>k__BackingField: 2
     <Value>k__BackingField: 5
     <Duration>k__BackingField: 2
     <DestroyTime>k__BackingField: 1
+    <Icon>k__BackingField: {fileID: 21300000, guid: 3ed8b826c817fc945a1dccc820af63ef, type: 3}
   _hasCooldown: 1
   <Cooldown>k__BackingField: 4
   <Title>k__BackingField: "\u0411\u0430\u0440\u044C\u0435\u0440"

@@ -19,7 +19,7 @@ public class AbilityButton : MonoBehaviour
 
         if (ability.Config.HasCooldown)
         {
-            this.ability.Owner.onTurnStart.AddListener(UpdateAbilityValues);
+            this.ability.Owner.onTurn.AddListener(UpdateAbilityValues);
             UpdateAbilityValues();
         }
         else
@@ -32,7 +32,7 @@ public class AbilityButton : MonoBehaviour
     {
         if (ability.Config.HasCooldown)
         {
-            ability.Owner.onTurnStart.RemoveListener(UpdateAbilityValues);
+            ability.Owner.onTurn.RemoveListener(UpdateAbilityValues);
         }
 
         Destroy(gameObject);
@@ -41,8 +41,9 @@ public class AbilityButton : MonoBehaviour
     {
         if (ability.IsAvailable())
         {
-            var sendedData = new RequestData<EffectProperties[]>(ability.Config.Id, ability.Config.EffectProperties);
-            ServicesAssistance.Main.Get<ServerAssistance>().SendAttackData(sendedData);
+            ServicesAssistance.Main.Get<TurnManager>().ChangeTurn(ability.Owner.Id);
+            ServicesAssistance.Main.Get<AdapterAssistance>().BuildEffect(ability.Owner.Id, 
+                ability.Config.Id, ability.Config.EffectProperties);
         }
     }
     private void UpdateAbilityValues()

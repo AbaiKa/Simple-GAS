@@ -76,4 +76,6 @@ public class EffectProperties
     [field: SerializeField]
     [field: Tooltip("Effect destroy time")]
     public int DestroyTime { get; private set; }
+    [field: SerializeField]
+    public Sprite Icon { get; private set; }
 }

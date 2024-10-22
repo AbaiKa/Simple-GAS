@@ -20,6 +20,7 @@ public class EffectsBuilder : IService
 [Serializable]
 public enum EffectType
 {
+    None,
     Attack,
     Shield,
     Healing,

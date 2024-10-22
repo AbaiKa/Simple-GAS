@@ -3,6 +3,6 @@ public class AttackEffect : AEffect
     public override EffectType Type => EffectType.Attack;
     protected override void Logic()
     {
-        target.TakeDamage(Value);
+        ServicesAssistance.Main.Get<AdapterAssistance>().TakeDamage(target.Id, Value);
     }
 }
