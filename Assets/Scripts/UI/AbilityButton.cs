@@ -44,6 +44,7 @@ public class AbilityButton : MonoBehaviour
             ServicesAssistance.Main.Get<TurnManager>().ChangeTurn(ability.Owner.Id);
             ServicesAssistance.Main.Get<AdapterAssistance>().BuildEffect(ability.Owner.Id, 
                 ability.Config.Id, ability.Config.EffectProperties);
+            ServicesAssistance.Main.Get<UIManager>().SetActiveAbilitiesPanel(false);
         }
     }
     private void UpdateAbilityValues()
